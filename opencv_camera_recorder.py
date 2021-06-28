@@ -7,11 +7,8 @@ import threading
 
 # TODO: Display timer
 # TODO: Display FPS
-# TODO: Control record and playback speed relation to real time
 # TODO: Timestamp frames
-# TODO: Timestamp saved clips
 # TODO: Autodetect devices
-# TODO: Profiling metrics
 
 
 def cat_horiz(image1, image2, img_sep=5, scale=False):
