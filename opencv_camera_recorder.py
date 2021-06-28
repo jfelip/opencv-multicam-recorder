@@ -115,6 +115,7 @@ class MultiStreamVideoGUI:
         nframe = 0
         help_on = False
         selected_stream = -1
+        times = dict()
 
         # Open CV Window
         cv2.namedWindow(self.win_name)
@@ -130,7 +131,7 @@ class MultiStreamVideoGUI:
                 cap_frames = self.caps.read()
                 if cap_frames[0] is None:
                     continue
-                print(f"Cap time: {time.time() - cap_t:5.3f}")
+                times["cap"] = time.time() - cap_t
 
                 # Highlight selected stream
                 if state == self.STATE_DISPLAY:
@@ -285,7 +286,12 @@ class MultiStreamVideoCapturer(threading.Thread):
             cap.set(cv2.CAP_PROP_FPS, self.target_fps)
 
             # TODO: Check video is properly opened
-            self.video_caps.append(cap)
+            if cap.isOpened():
+                self.video_caps.append(cap)
+                print(f"Opened cam: {stream_cfg['id']}. Backend: {cap.getBackendName()}")
+            else:
+                print(f"ERROR: Unable to open camera {stream_cfg['id']} with "
+                      f"{stream_cfg['width']}w x {stream_cfg['height']}h@{config['fps']}fps")
 
         self.nstreams = len(self.video_caps)
         self.streams_rotation = [-1] * self.nstreams
@@ -376,13 +382,8 @@ class MultiStreamVideoWriter:
 
 
 if __name__ == "__main__":
-    # cameras = [{"name": "c1", "id": "/dev/video1", "width": 800, "height": 448, "buffer_size": 2}]
-    # cameras = [{"name": "c1", "id": "/dev/video0", "width": 640, "height": 360, "buffer_size": 2}]
-    # cameras = [{"name": "c1", "id": "/dev/video0", "width": 640, "height": 360, "buffer_size": 2},
-    #            {"name": "c2", "id": "/dev/video1", "width": 800, "height": 448, "buffer_size": 2}]
-
     cameras = [{"name": "c1", "id": "/dev/video0", "width": 640, "height": 360, "buffer_size": 2},
-               {"name": "c2", "id": "/dev/video1", "width": 800, "height": 448, "buffer_size": 2}]
+               {"name": "c2", "id": "/dev/video2", "width": 800, "height": 448, "buffer_size": 2}]
 
     config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
               "img_sep": 5, "streams": cameras, "scale_mosaic": False, "fps": 30}
