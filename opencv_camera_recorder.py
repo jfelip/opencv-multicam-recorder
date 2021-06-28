@@ -127,22 +127,28 @@ class MultiStreamVideoGUI:
             # If displaying or recording capture frames
             if state == self.STATE_DISPLAY or state == self.STATE_RECORD:
                 # Capture a frame from each stream
-                cap_t = time.time()
+                t_ini = time.time()
                 cap_frames = self.caps.read()
                 if cap_frames[0] is None:
                     continue
-                times["cap"] = time.time() - cap_t
+                times["cap"] = time.time() - t_ini
 
                 # Highlight selected stream
+                t_ini = time.time()
                 if state == self.STATE_DISPLAY:
                     if selected_stream != -1:
                         cap_frames[selected_stream] = cv2.rectangle(cap_frames[selected_stream], (0, 0),
                                                                     (cap_frames[selected_stream].shape[1],
                                                                      cap_frames[selected_stream].shape[0]),
                                                                     color=(0, 0, 255), thickness=5)
+                times["draw_selected_rect"] = time.time() - t_ini
+
+                t_ini = time.time()
                 show_frame = np.copy(cap_frames[0])
+                times["copy_show_frame"] = time.time() - t_ini
 
                 # Compose the mosaic to show if there are more than one streams active
+                t_ini = time.time()
                 if len(cap_frames) > 1:
                     for f in cap_frames[1:]:
                         if show_frame.shape[0] + f.shape[0] > show_frame.shape[1] + f.shape[1]:
@@ -150,18 +156,25 @@ class MultiStreamVideoGUI:
                         else:
                             show_frame = cat_vert(show_frame, f, self.img_sep, self.scale_mosaic)
                 cap_frames.append(show_frame)
+                times["compose_mosaic"] = time.time() - t_ini
 
             if state == self.STATE_RECORD:
+                t_ini = time.time()
                 self.writers.write(cap_frames)
+                times["write_frames"] = time.time() - t_ini
+                t_ini = time.time()
                 for i in range(len(cap_frames)):
                     frames[i].append(np.copy(cap_frames[i]))
                 nframe += 1
+                times["copy_frames_for_playback_mode"] = time.time() - t_ini
 
             elif state == self.STATE_REPLAY:
+                t_ini = time.time()
                 if nframe >= len(frames[-1]):
                     nframe = 0
                 show_frame = np.copy(frames[-1][nframe])
                 nframe += 1
+                times["copy_frame_for_playback_mode"] = time.time() - t_ini
 
             elif state == self.STATE_REPLAY_PAUSED:
                 if nframe >= len(frames[-1]):
@@ -169,19 +182,20 @@ class MultiStreamVideoGUI:
                 show_frame = np.copy(frames[-1][nframe])
 
             if help_on:
-                show_frame = put_text_multiline(show_frame, self.help_text, (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                                (255, 128, 255), 2)
+                t_ini = time.time()
+                show_frame = put_text_multiline(show_frame, self.help_text, (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                                (255, 128, 255), 1, line_advance=10)
+                times["draw_help_msg"] = time.time() - t_ini
+            else:
+                t_ini = time.time()
+                state_text, state_color = self.get_state_text_color(state, self.writers.sequence_n,
+                                                                    self.target_fps, nframe, len(frames[-1]))
 
-            ntotal_frames = 0
-            if len(frames[-1]) > 0:
-                ntotal_frames = len(frames[-1])
-            state_text, state_color = self.get_state_text_color(state, self.writers.sequence_n,
-                                                                self.target_fps, nframe, ntotal_frames)
+                show_frame = put_text_multiline(show_frame, state_text, (10, 30),
+                                                cv2.FONT_HERSHEY_SIMPLEX, 1, state_color, 2)
+                times["draw_state_msg"] = time.time() - t_ini
 
-            show_frame = put_text_multiline(show_frame, state_text, (10, 30),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 1, state_color, 2)
-            cv2.imshow(self.win_name, show_frame)
-
+            t_ini = time.time()
             if key == self.record_key:
                 if state == self.STATE_REPLAY_PAUSED:
                     state = self.STATE_RECORD_PAUSED
@@ -242,8 +256,16 @@ class MultiStreamVideoGUI:
                 nframe += 1
                 nframe = min(len(frames[-1]) - 1, nframe)
 
-            if key != -1:
-                print(f"Key press: {key}")
+            times["process_keys"] = time.time() - t_ini
+
+            if help_on:
+                debug_str = "\n".join([f"{key}: {val*1000:5.3f}ms" for (key, val) in times.items()])
+                show_frame = put_text_multiline(show_frame, debug_str, (20, 240),
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.4, state_color, 1, line_advance=12)
+
+            t_ini = time.time()
+            cv2.imshow(self.win_name, show_frame)
+            times["imshow"] = time.time() - t_ini
 
             t_elapsed_ms = int((time.time() - t_start) * 1000)
             key = cv2.waitKey(int((1/self.target_fps) * 1000) - t_elapsed_ms)
@@ -383,7 +405,7 @@ class MultiStreamVideoWriter:
 
 if __name__ == "__main__":
     cameras = [{"name": "c1", "id": "/dev/video0", "width": 640, "height": 360, "buffer_size": 2},
-               {"name": "c2", "id": "/dev/video2", "width": 800, "height": 448, "buffer_size": 2}]
+               {"name": "c2", "id": "/dev/video1", "width": 800, "height": 448, "buffer_size": 2}]
 
     config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
               "img_sep": 5, "streams": cameras, "scale_mosaic": False, "fps": 30}
