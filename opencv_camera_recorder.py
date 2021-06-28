@@ -5,10 +5,12 @@ import numpy as np
 import threading
 
 
-# TODO: Display timer
-# TODO: Display FPS
+# TODO: Display GUI FPS
 # TODO: Timestamp frames
 # TODO: Autodetect devices
+# TODO: Get/Display frame stats
+# TODO: Improve recording/playback memory management. Free memory after save frames.
+# TODO: Replace replay buffer in memory by reading frames from file
 
 
 def cat_horiz(image1, image2, img_sep=5, scale=False):
@@ -59,7 +61,7 @@ def put_text_multiline(img, text, pos=(20, 20), font=cv2.FONT_HERSHEY_SIMPLEX,
                        scale=0.5, color=(255, 128, 255), thickness=2, line_advance=20):
     posl = [pos[0], pos[1]]
     for l in text.split("\n"):
-        img = cv2.putText(img, l, (posl[0], posl[1]), font, scale, color, thickness)
+        img = cv2.putText(img, l, (posl[0], posl[1]), font, scale, color, thickness, lineType=cv2.LINE_AA)
         posl[1] += line_advance
     return img
 
@@ -94,6 +96,7 @@ class MultiStreamVideoGUI:
     prev_frame_key = 119  # w        (pause and one frame back)
     select_stream_key = 9  # tab      (select stream)
     rotate_stream_key = 113  # q        (rotate selected stream 90deg)
+    display_stopwatch = 116  # t        (toggle stopwatch)
     display_help_key = 104  # h        (toggle this message)
 
     def __init__(self, config):
@@ -111,11 +114,14 @@ class MultiStreamVideoGUI:
         frames = [[] for i in range(self.caps.nstreams + 1)]
         nframe = 0
         help_on = False
+        timer_on = True
         selected_stream = -1
         times = dict()
 
         # Open CV Window
         cv2.namedWindow(self.win_name)
+
+        t_stopwatch = time.time()
 
         key = 0
         while key != self.exit_key:
@@ -188,8 +194,10 @@ class MultiStreamVideoGUI:
                 state_text, state_color = self.get_state_text_color(state, self.writers.sequence_n,
                                                                     self.target_fps, nframe, len(frames[-1]))
 
+                state_text += f"\n{time.time() - t_stopwatch:5.2f}s"
+
                 show_frame = put_text_multiline(show_frame, state_text, (10, 30),
-                                                cv2.FONT_HERSHEY_SIMPLEX, 1, state_color, 2)
+                                                cv2.FONT_HERSHEY_SIMPLEX, 1, state_color, 2, line_advance=30)
                 times["draw_state_msg"] = time.time() - t_ini
 
             t_ini = time.time()
@@ -201,10 +209,13 @@ class MultiStreamVideoGUI:
 
             if key == self.replay_key:
                 if (state == self.STATE_DISPLAY or state == self.STATE_RECORD) and len(frames) > 0:
+                    if state != self.STATE_DISPLAY:
+                        t_stopwatch = time.time()
                     state = self.STATE_REPLAY
 
                 elif state == self.STATE_RECORD_PAUSED:
                     state = self.STATE_REPLAY_PAUSED
+                    t_stopwatch = time.time()
 
                 elif state == self.STATE_REPLAY or state == self.STATE_REPLAY_PAUSED:
                     state = self.STATE_DISPLAY
