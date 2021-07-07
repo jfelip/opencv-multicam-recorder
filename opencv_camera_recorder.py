@@ -278,8 +278,8 @@ class MultiStreamVideoGUI:
             t_elapsed_ms = int((time.time() - t_start) * 1000)
             key = cv2.waitKey(int((1/self.target_fps) * 1000) - t_elapsed_ms)
 
-        self.writers.reset()
         self.caps.release()
+        self.writers.reset()
 
     def get_state_text_color(self, state, seq, fps, nframe, ntotalframes):
         if state == self.STATE_REPLAY_PAUSED:
@@ -308,17 +308,23 @@ class MultiStreamVideoCapturer(threading.Thread):
         super().__init__()
         self.video_caps = list()
         self.target_fps = config["fps"]
+        self.streams_cfg = config["streams"]
         for stream_cfg in config["streams"]:
             cap = cv2.VideoCapture(stream_cfg["id"], cv2.CAP_V4L2)
-            cap.set(3, stream_cfg["width"])
-            cap.set(4, stream_cfg["height"])
-            cap.set(cv2.CAP_PROP_BUFFERSIZE, stream_cfg["buffer_size"])
-            cap.set(cv2.CAP_PROP_FPS, self.target_fps)
+            if not cap.set(cv2.CAP_PROP_FRAME_WIDTH, stream_cfg["width"]):
+                print(f"Unable to set frame width to {stream_cfg['width']} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_FRAME_HEIGHT, stream_cfg["height"]):
+                print(f"Unable to set frame height to {stream_cfg['height']} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_BUFFERSIZE, stream_cfg["buffer_size"]):
+                print(f"Unable to set buffer_size to {stream_cfg['buffer_size']} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_FPS, self.target_fps):
+                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
 
-            # TODO: Check video is properly opened
             if cap.isOpened():
                 self.video_caps.append(cap)
                 print(f"Opened cam: {stream_cfg['id']}. Backend: {cap.getBackendName()}")
+                print(f"|-> config: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
+                      f"{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}@{cap.get(cv2.CAP_PROP_FPS)}")
             else:
                 print(f"ERROR: Unable to open camera {stream_cfg['id']} with "
                       f"{stream_cfg['width']}w x {stream_cfg['height']}h@{config['fps']}fps")
@@ -360,21 +366,24 @@ class MultiStreamVideoCapturer(threading.Thread):
                 cap.grab()
 
             for i, cap in enumerate(self.video_caps):
-                ret, frame = cap.retrieve()
-                assert ret
-                # Rotate if necessary
-                if self.streams_rotation[i] != -1:
-                    frame = cv2.rotate(frame, self.streams_rotation[i])
-                cap_frames.append(frame)
+                if cap.isOpened():
+                    ret, frame = cap.retrieve()
+                    if not ret:
+                        print(f"Failed to acquire frame from device: {self.streams_cfg[i]['id']}")
+                        continue
+                    # Rotate if necessary
+                    if self.streams_rotation[i] != -1:
+                        frame = cv2.rotate(frame, self.streams_rotation[i])
+                    cap_frames.append(frame)
             self.mutex.acquire()
             self.frames = cap_frames
             self.mutex.release()
             time.sleep(0.001)
 
     def release(self):
+        self.running = False
         for cap in self.video_caps:
             cap.release()
-        self.running = False
 
 
 class MultiStreamVideoWriter:
