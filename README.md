@@ -30,3 +30,9 @@ Camera ids and devices can be checked with v4l2-ctl
 ```shell
 v4l2-ctl --list-devices
 ```
+
+Todo List
+ * Autodetect cameras
+ * Overlay camera metadata on each frame  
+ * Add audio recording capabilities
+ * Add manual exposure and manual focus as user parameters
