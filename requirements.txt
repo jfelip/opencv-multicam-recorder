@@ -1,2 +1,2 @@
 numpy
-python-opencv
+opencv-python
