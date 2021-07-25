@@ -319,6 +319,10 @@ class MultiStreamVideoCapturer(threading.Thread):
                 print(f"Unable to set buffer_size to {stream_cfg['buffer_size']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_FPS, self.target_fps):
                 print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3):
+                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_EXPOSURE, 11):
+                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
 
             if cap.isOpened():
                 self.video_caps.append(cap)
@@ -433,8 +437,6 @@ class V4L2CameraDetector:
                 else:
                     print(f" - NOT Capturing images: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
                           f"{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}@{cap.get(cv2.CAP_PROP_FPS)}")
-
-
             cap.release()
 
 
@@ -444,7 +446,7 @@ if __name__ == "__main__":
                {"name": "c2", "id": "/dev/video4", "width": 800, "height": 448, "buffer_size": 2}]
 
     config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
-              "img_sep": 5, "streams": cameras, "scale_mosaic": False, "fps": 20}
+              "img_sep": 5, "streams": cameras, "scale_mosaic": True, "fps": 30}
 
     cams = V4L2CameraDetector(20)
 
