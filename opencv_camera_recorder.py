@@ -307,9 +307,18 @@ class MultiStreamVideoCapturer(threading.Thread):
     def __init__(self, config):
         super().__init__()
         self.video_caps = list()
+        self.streams_rotation = list()
         self.target_fps = config["fps"]
         self.streams_cfg = config["streams"]
         for stream_cfg in config["streams"]:
+            # Fill in default capture options
+            if "auto_exposure" not in stream_cfg.keys():
+                stream_cfg["auto_exposure"] = 3
+            if "exposure" not in stream_cfg.keys():
+                stream_cfg["exposure"] = 100
+            if "rotation" not in stream_cfg.keys():
+                stream_cfg["rotation"] = -1
+
             cap = cv2.VideoCapture(stream_cfg["id"], cv2.CAP_V4L2)
             if not cap.set(cv2.CAP_PROP_FRAME_WIDTH, stream_cfg["width"]):
                 print(f"Unable to set frame width to {stream_cfg['width']} on device: {stream_cfg['id']}")
@@ -319,13 +328,14 @@ class MultiStreamVideoCapturer(threading.Thread):
                 print(f"Unable to set buffer_size to {stream_cfg['buffer_size']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_FPS, self.target_fps):
                 print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
-            if not cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3):
-                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
-            if not cap.set(cv2.CAP_PROP_EXPOSURE, 11):
-                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, stream_cfg['auto_exposure']):
+                print(f"Unable to set AUTO_EXPOSURE to {stream_cfg['auto_exposure']} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_EXPOSURE, stream_cfg['exposure']):
+                print(f"Unable to set EXPOSURE to {stream_cfg['exposure']} on device: {stream_cfg['id']}")
 
             if cap.isOpened():
                 self.video_caps.append(cap)
+                self.streams_rotation.append(stream_cfg["rotation"])
                 print(f"Opened cam: {stream_cfg['id']}. Backend: {cap.getBackendName()}")
                 print(f"|-> config: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
                       f"{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}@{cap.get(cv2.CAP_PROP_FPS)}")
@@ -334,7 +344,6 @@ class MultiStreamVideoCapturer(threading.Thread):
                       f"{stream_cfg['width']}w x {stream_cfg['height']}h@{config['fps']}fps")
 
         self.nstreams = len(self.video_caps)
-        self.streams_rotation = [-1] * self.nstreams
         self.streams_fps = [0.0] * self.nstreams
         self.seq = 0
         self.nframe = 0
