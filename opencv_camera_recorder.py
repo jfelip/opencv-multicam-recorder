@@ -236,12 +236,14 @@ class MultiStreamVideoGUI:
             if key == self.save_key:
                 self.writers.reset()
                 state = self.STATE_DISPLAY
+                frames.clear()
                 frames = [[] for i in range(self.caps.nstreams + 1)]
                 nframe = 0
 
             if key == self.erase_key:
                 self.writers.reset(overwrite=True)
                 state = self.STATE_DISPLAY
+                frames.clear()
                 frames = [[] for i in range(self.caps.nstreams + 1)]
                 nframe = 0
 
