@@ -452,14 +452,12 @@ class V4L2CameraDetector:
 
 
 if __name__ == "__main__":
-    cameras = [{"name": "c1", "id": "/dev/video2", "width": 640, "height": 480, "buffer_size": 2},
-               {"name": "c2", "id": "/dev/video0", "width": 800, "height": 448, "buffer_size": 2},
-               {"name": "c2", "id": "/dev/video4", "width": 800, "height": 448, "buffer_size": 2}]
+    cameras = [{"name": "c1", "id": "/dev/video2", "width": 640, "height": 480, "buffer_size": 2, "rotation": 2},
+               {"name": "c2", "id": "/dev/video0", "width": 800, "height": 448, "buffer_size": 2, "rotation": 0},
+               {"name": "c2", "id": "/dev/video4", "width": 800, "height": 448, "buffer_size": 2, "rotation": 2}]
 
     config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
-              "img_sep": 5, "streams": cameras, "scale_mosaic": True, "fps": 30}
-
-    cams = V4L2CameraDetector(20)
+              "img_sep": 5, "streams": cameras, "scale_mosaic": True, "fps": 20}
 
     gui = MultiStreamVideoGUI(config)
     gui.run()
