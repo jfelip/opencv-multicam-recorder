@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import threading
 import json
+import sys
 from cv_image_utils import put_text_multiline
 from cv_image_utils import cat_vert
 from cv_image_utils import cat_horiz
@@ -54,11 +55,13 @@ class MultiStreamVideoGUI:
     def __init__(self, config):
         self.caps = MultiStreamVideoCapturer(config)
         self.caps.start()
-        self.writers = MultiStreamVideoWriter(config["fps"])
+        self.writers = MultiStreamVideoWriter(config["fps"],
+                                              config["data_folder"])
         self.win_name = config["win_name"]
         self.img_sep = config["img_sep"]
         self.scale_mosaic = config["scale_mosaic"]
         self.target_fps = config["fps"]
+        self.data_folder = config["data_folder"]
 
     def run(self):
         # Init recording variables
@@ -337,7 +340,8 @@ class MultiStreamVideoCapturer(threading.Thread):
                 if cap.isOpened():
                     ret, frame = cap.retrieve()
                     if not ret:
-                        print(f"Failed to acquire frame from device: {self.streams_cfg[i]['id']}")
+                        print(f"Failed to acquire frame from device: "
+                              f"{self.streams_cfg[i]['id']}")
                         continue
                     # Rotate if necessary
                     if self.streams_rotation[i] != -1:
@@ -355,11 +359,12 @@ class MultiStreamVideoCapturer(threading.Thread):
 
 
 class MultiStreamVideoWriter:
-    def __init__(self, fps):
+    def __init__(self, fps, data_folder=""):
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         self.video_writers = None
         self.sequence_n = 0
         self.target_fps = fps
+        self.data_folder = data_folder
 
     def __del__(self):
         if self.video_writers is not None:
@@ -383,13 +388,32 @@ class MultiStreamVideoWriter:
         for i in range(len(frames)):
             if self.video_writers[i] is None:
                 date_str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-                self.video_writers[i] = cv2.VideoWriter(f"{date_str}_seq_{self.sequence_n}_cam_{i}.mp4", self.fourcc,
-                                                        self.target_fps, (frames[i].shape[1], frames[i].shape[0]))
+                filename = f"{self.data_folder}/{date_str}_seq_{self.sequence_n}_cam_{i}.mp4"
+                self.video_writers[i] = \
+                    cv2.VideoWriter(filename,
+                                    self.fourcc,
+                                    self.target_fps,
+                                    (frames[i].shape[1], frames[i].shape[0]))
             self.video_writers[i].write(frames[i])
 
 
 if __name__ == "__main__":
-    with open("config/tork_config.json") as fp:
+    config_file = "../config/tork_config.json"
+    data_folder = "../videos"
+
+    if len(sys.argv) == 2:
+        filename = sys.argv[1]
+
+    if len(sys.argv) == 3:
+        data_folder = sys.argv[2]
+
+    print(f"Config file: {config_file}")
+    print(f"Data folder: {data_folder}")
+
+    with open(config_file) as fp:
         config = json.load(fp)
+
+    config["data_folder"] = data_folder
+
     gui = MultiStreamVideoGUI(config)
     gui.run()
