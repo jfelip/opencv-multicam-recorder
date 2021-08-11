@@ -11,6 +11,8 @@ import threading
 # TODO: Get/Display frame stats
 # TODO: Improve recording/playback memory management. Free memory after save frames.
 # TODO: Replace replay buffer in memory by reading frames from file
+# TODO: Option to show camera id (device) and name overlay
+# TODO: Camera configs in .yaml
 
 
 def cat_horiz(image1, image2, img_sep=5, scale=False):
@@ -453,11 +455,11 @@ class V4L2CameraDetector:
 
 if __name__ == "__main__":
     cameras = [{"name": "c1", "id": "/dev/video2", "width": 640, "height": 480, "buffer_size": 2, "rotation": 2},
-               {"name": "c2", "id": "/dev/video0", "width": 800, "height": 448, "buffer_size": 2, "rotation": 0},
+               {"name": "c2", "id": "/dev/video0", "width": 800, "height": 448, "buffer_size": 2, "rotation": 2},
                {"name": "c2", "id": "/dev/video4", "width": 800, "height": 448, "buffer_size": 2, "rotation": 2}]
 
     config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
-              "img_sep": 5, "streams": cameras, "scale_mosaic": True, "fps": 20}
+              "img_sep": 5, "streams": cameras, "scale_mosaic": False, "fps": 20}
 
     gui = MultiStreamVideoGUI(config)
     gui.run()
