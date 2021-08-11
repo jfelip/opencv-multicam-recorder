@@ -63,7 +63,9 @@ class MultiStreamVideoGUI:
     def run(self):
         # Init recording variables
         state = self.STATE_DISPLAY
-        frames = [[] for i in range(self.caps.nstreams + 1)]
+
+        # Frames are only for replay, store only the shown frame
+        frames = list()
         nframe = 0
         help_on = False
         timer_on = True
@@ -118,23 +120,22 @@ class MultiStreamVideoGUI:
                 self.writers.write(cap_frames)
                 times["write_frames"] = time.time() - t_ini
                 t_ini = time.time()
-                for i in range(len(cap_frames)):
-                    frames[i].append(np.copy(cap_frames[i]))
+                frames.append(np.copy(cap_frames[-1]))
                 nframe += 1
                 times["copy_frames_for_playback_mode"] = time.time() - t_ini
 
             elif state == self.STATE_REPLAY:
                 t_ini = time.time()
-                if nframe >= len(frames[-1]):
+                if nframe >= len(frames):
                     nframe = 0
-                show_frame = np.copy(frames[-1][nframe])
+                show_frame = np.copy(frames[nframe])
                 nframe += 1
                 times["copy_frame_for_playback_mode"] = time.time() - t_ini
 
             elif state == self.STATE_REPLAY_PAUSED:
-                if nframe >= len(frames[-1]):
+                if nframe >= len(frames):
                     nframe = 0
-                show_frame = np.copy(frames[-1][nframe])
+                show_frame = np.copy(frames[nframe])
 
             if help_on:
                 t_ini = time.time()
@@ -144,7 +145,7 @@ class MultiStreamVideoGUI:
             else:
                 t_ini = time.time()
                 state_text, state_color = self.get_state_text_color(state, self.writers.sequence_n,
-                                                                    self.target_fps, nframe, len(frames[-1]))
+                                                                    self.target_fps, nframe, len(frames))
 
                 state_text += f"\n{time.time() - t_stopwatch:5.2f}s"
 
@@ -189,14 +190,14 @@ class MultiStreamVideoGUI:
                 self.writers.reset()
                 state = self.STATE_DISPLAY
                 frames.clear()
-                frames = [[] for i in range(self.caps.nstreams + 1)]
+                frames = list()
                 nframe = 0
 
             if key == self.erase_key:
                 self.writers.reset(overwrite=True)
                 state = self.STATE_DISPLAY
                 frames.clear()
-                frames = [[] for i in range(self.caps.nstreams + 1)]
+                frames = list()
                 nframe = 0
 
             if key == self.rotate_stream_key and selected_stream != -1:
@@ -204,7 +205,7 @@ class MultiStreamVideoGUI:
 
             if key == self.select_stream_key:
                 selected_stream += 1
-                if selected_stream >= len(frames) - 1:
+                if selected_stream >= len(cap_frames) - 1:
                     selected_stream = -1
 
             if key == self.display_help_key:
@@ -216,7 +217,7 @@ class MultiStreamVideoGUI:
 
             if key == self.next_frame_key and state == self.STATE_REPLAY_PAUSED:
                 nframe += 1
-                nframe = min(len(frames[-1]) - 1, nframe)
+                nframe = min(len(frames) - 1, nframe)
 
             times["process_keys"] = time.time() - t_ini
 
