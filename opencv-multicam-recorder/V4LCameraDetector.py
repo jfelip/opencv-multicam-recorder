@@ -1,5 +1,7 @@
 import cv2
 
+# TODO: Display camera name, parameters and valid modes
+
 
 class V4L2CameraDetector:
     def __init__(self, ncameras=50):
