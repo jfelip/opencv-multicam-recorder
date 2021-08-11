@@ -1,0 +1,32 @@
+{
+  "win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
+  "img_sep": 5,
+  "scale_mosaic": true,
+  "fps": 20,
+  "streams": [
+    {
+      "name": "c1",
+      "id": "/dev/video2",
+      "width": 640,
+      "height": 480,
+      "buffer_size": 2,
+      "rotation": 2
+    },
+    {
+      "name": "c2",
+      "id": "/dev/video0",
+      "width": 800,
+      "height": 448,
+      "buffer_size": 2,
+      "rotation": 0
+    },
+    {
+      "name": "c2",
+      "id": "/dev/video4",
+      "width": 800,
+      "height": 448,
+      "buffer_size": 2,
+      "rotation": 2
+    }
+  ]
+}

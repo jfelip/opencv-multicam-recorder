@@ -3,6 +3,10 @@ from datetime import datetime
 import cv2
 import numpy as np
 import threading
+import json
+from cv_image_utils import put_text_multiline
+from cv_image_utils import cat_vert
+from cv_image_utils import cat_horiz
 
 
 # TODO: Display GUI FPS
@@ -12,60 +16,6 @@ import threading
 # TODO: Improve recording/playback memory management. Free memory after save frames.
 # TODO: Replace replay buffer in memory by reading frames from file
 # TODO: Option to show camera id (device) and name overlay
-# TODO: Camera configs in .yaml
-
-
-def cat_horiz(image1, image2, img_sep=5, scale=False):
-    if scale:
-        high = np.maximum(image1.shape[0], image2.shape[0])
-        low = np.minimum(image1.shape[0], image2.shape[0])
-        scale_fac = float(high) / float(low)
-        if image1.shape[0] < image2.shape[0]:
-            im_size = (int(image1.shape[1] * scale_fac), int(image1.shape[0] * scale_fac))
-            image1 = cv2.resize(image1, dsize=im_size)
-        elif image1.shape[0] > image2.shape[0]:
-            im_size = (int(image2.shape[1] * scale_fac), int(image2.shape[0] * scale_fac))
-            image2 = cv2.resize(image2, dsize=im_size)
-
-    cat_shape = [np.maximum(image1.shape[0], image2.shape[0]),
-                 image1.shape[1] + image2.shape[1] + img_sep,
-                 image2.shape[2]]
-
-    frames = np.zeros(cat_shape, dtype=image1.dtype)
-    frames[0:image1.shape[0], 0:image1.shape[1]] = image1
-    frames[0:image2.shape[0], image1.shape[1] + img_sep:] = image2
-    return frames
-
-
-def cat_vert(image1, image2, img_sep=5, scale=False):
-    if scale:
-        high = np.maximum(image1.shape[1], image2.shape[1])
-        low = np.minimum(image1.shape[1], image2.shape[1])
-        scale_fac = float(high) / float(low)
-        if image1.shape[0] < image2.shape[0]:
-            im_size = (int(image1.shape[1] * scale_fac), int(image1.shape[0] * scale_fac))
-            image1 = cv2.resize(image1, dsize=im_size)
-        elif image1.shape[0] > image2.shape[0]:
-            im_size = (int(image2.shape[1] * scale_fac), int(image2.shape[0] * scale_fac))
-            image2 = cv2.resize(image2, dsize=im_size)
-
-    cat_shape = [image1.shape[0] + image2.shape[0] + img_sep,
-                 np.maximum(image1.shape[1], image2.shape[1]),
-                 image2.shape[2]]
-
-    frames = np.zeros(cat_shape, dtype=image1.dtype)
-    frames[0:image1.shape[0], 0:image1.shape[1]] = image1
-    frames[image1.shape[0] + img_sep:, 0:image2.shape[1]] = image2
-    return frames
-
-
-def put_text_multiline(img, text, pos=(20, 20), font=cv2.FONT_HERSHEY_SIMPLEX,
-                       scale=0.5, color=(255, 128, 255), thickness=2, line_advance=20):
-    posl = [pos[0], pos[1]]
-    for l in text.split("\n"):
-        img = cv2.putText(img, l, (posl[0], posl[1]), font, scale, color, thickness, lineType=cv2.LINE_AA)
-        posl[1] += line_advance
-    return img
 
 
 class MultiStreamVideoGUI:
@@ -454,12 +404,7 @@ class V4L2CameraDetector:
 
 
 if __name__ == "__main__":
-    cameras = [{"name": "c1", "id": "/dev/video2", "width": 640, "height": 480, "buffer_size": 2, "rotation": 2},
-               {"name": "c2", "id": "/dev/video0", "width": 800, "height": 448, "buffer_size": 2, "rotation": 2},
-               {"name": "c2", "id": "/dev/video4", "width": 800, "height": 448, "buffer_size": 2, "rotation": 2}]
-
-    config = {"win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
-              "img_sep": 5, "streams": cameras, "scale_mosaic": False, "fps": 20}
-
+    with open("config/tork_config.json") as fp:
+        config = json.load(fp)
     gui = MultiStreamVideoGUI(config)
     gui.run()
