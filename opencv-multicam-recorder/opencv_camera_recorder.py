@@ -8,6 +8,7 @@ import sys
 from cv_image_utils import put_text_multiline
 from cv_image_utils import cat_vert
 from cv_image_utils import cat_horiz
+from cv_image_utils import get_camera_name
 
 
 # TODO: Display GUI FPS
@@ -295,6 +296,7 @@ class MultiStreamVideoCapturer(threading.Thread):
                 self.video_caps.append(cap)
                 self.streams_rotation.append(stream_cfg["rotation"])
                 print(f"Opened cam: {stream_cfg['id']}. Backend: {cap.getBackendName()}")
+                print(f"|-> name: {get_camera_name(stream_cfg['id'])}")
                 print(f"|-> config: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
                       f"{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}@{cap.get(cv2.CAP_PROP_FPS)}")
             else:

@@ -1,3 +1,5 @@
+import os
+import sys
 import cv2
 import numpy as np
 
@@ -53,3 +55,8 @@ def put_text_multiline(img, text, pos=(20, 20), font=cv2.FONT_HERSHEY_SIMPLEX,
         img = cv2.putText(img, l, (posl[0], posl[1]), font, scale, color, thickness, lineType=cv2.LINE_AA)
         posl[1] += line_advance
     return img
+
+
+def get_camera_name(device_id: str):
+    return os.popen(f"cat /sys/class/video4linux/"
+                    f"{device_id.split(os.sep)[-1]}/name").read().strip()

@@ -2,7 +2,7 @@
   "win_name": "Multi Camera Capturer :: javier.felip.leon@gmail.com",
   "img_sep": 5,
   "scale_mosaic": true,
-  "fps": 20,
+  "fps": 30,
   "streams": [
     {
       "name": "c1",
