@@ -1,10 +1,23 @@
 # opencv-multicam-recorder
-
-Simple multicamera recorder based on OpenCV. Produces separated 
+Simple multicamera recorder based on OpenCV. Produces separated
 videos for each stream and a mosaic version of the video. The interactive
 GUI lets you configure the orientation of the streams, record, pause and
 playback.
 
+
+### Installation
+Device detection requires python package v4lctl, the version in pip
+is outdated and you need to install at least the version 0.1b1 from
+the source repo.
+```
+git clone git@github.com:jfelip/v4l2ctl.git
+cd v4l2ctl
+git checkout origin/Release_v0.1b1
+pip install .
+```
+
+
+### Usage
 Control keys
 ```text
     esc      (exit program)
@@ -26,13 +39,17 @@ Configure the desired cameras to open on the config dictionary and start.
                {"name": "c2", "id": "/dev/video1", "width": 800, "height": 448, "buffer_size": 2}]
 ```
 
-Camera ids and devices can be checked with v4l2-ctl
-```shell
-v4l2-ctl --list-devices
-```
+Use the V4LCameraDetector.py script to detect the cameras that are
+available on your system, their supported resolutions and frame rates.
+Configure the capturer .json configuration with the desired camera
+resolutions and frame rates.
 
 Todo List
  * Autodetect cameras
- * Overlay camera metadata on each frame  
+ * Overlay camera data on each frame
+   * Resolution, frame rate, timestamp
  * Add audio recording capabilities
- * Add manual exposure and manual focus as user parameters
+ * Add interactive auto exposure and exposure controls
+ * General config file
+   * Display types
+   * Overlay text size and colors
