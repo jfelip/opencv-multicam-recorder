@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import time
 from datetime import datetime
 import cv2
@@ -112,7 +113,9 @@ class MultiStreamVideoGUI:
                 t_ini = time.time()
                 if len(cap_frames) > 1:
                     for f in cap_frames[1:]:
-                        if show_frame.shape[0] + f.shape[0] > show_frame.shape[1] + f.shape[1]:
+                        # TODO: Use the resolution of the screen to make the mosaic. Here the horizontal
+                        #       screen resolution is set manually.
+                        if show_frame.shape[1] + f.shape[1] < 1920:
                             show_frame = cat_horiz(show_frame, f, self.img_sep, self.scale_mosaic)
                         else:
                             show_frame = cat_vert(show_frame, f, self.img_sep, self.scale_mosaic)
@@ -279,18 +282,19 @@ class MultiStreamVideoCapturer(threading.Thread):
                 stream_cfg["rotation"] = -1
 
             cap = cv2.VideoCapture(stream_cfg["id"], cv2.CAP_V4L2)
+            print(f"Opening cam: {stream_cfg['id']}. Backend: {cv2.CAP_V4L2}")
             if not cap.set(cv2.CAP_PROP_FRAME_WIDTH, stream_cfg["width"]):
-                print(f"Unable to set frame width to {stream_cfg['width']} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set frame width to {stream_cfg['width']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_FRAME_HEIGHT, stream_cfg["height"]):
-                print(f"Unable to set frame height to {stream_cfg['height']} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set frame height to {stream_cfg['height']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_BUFFERSIZE, stream_cfg["buffer_size"]):
-                print(f"Unable to set buffer_size to {stream_cfg['buffer_size']} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set buffer_size to {stream_cfg['buffer_size']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_FPS, self.target_fps):
-                print(f"Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set FPS to {self.target_fps} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, stream_cfg['auto_exposure']):
-                print(f"Unable to set AUTO_EXPOSURE to {stream_cfg['auto_exposure']} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set AUTO_EXPOSURE to {stream_cfg['auto_exposure']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_EXPOSURE, stream_cfg['exposure']):
-                print(f"Unable to set EXPOSURE to {stream_cfg['exposure']} on device: {stream_cfg['id']}")
+                print(f"|-> Unable to set EXPOSURE to {stream_cfg['exposure']} on device: {stream_cfg['id']}")
 
             if cap.isOpened():
                 self.video_caps.append(cap)
@@ -300,7 +304,7 @@ class MultiStreamVideoCapturer(threading.Thread):
                 print(f"|-> config: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
                       f"{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}@{cap.get(cv2.CAP_PROP_FPS)}")
             else:
-                print(f"ERROR: Unable to open camera {stream_cfg['id']} with "
+                print(f"|-> ERROR: Unable to open camera {stream_cfg['id']} with "
                       f"{stream_cfg['width']}w x {stream_cfg['height']}h@{config['fps']}fps")
 
         self.nstreams = len(self.video_caps)
