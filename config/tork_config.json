@@ -12,25 +12,28 @@
       "buffer_size": 2,
       "rotation": 0,
       "exposure": 188,
-      "auto_exposure": 1
-    },
-    {
-      "name": "front",
-      "id": "/dev/video6",
-      "width": 640,
-      "height": 480,
-      "buffer_size": 2,
-      "rotation": 0
+      "auto_exposure": 1,
+      "timestamp": true
     },
     {
       "name": "back",
-      "id": "/dev/video8",
+      "id": "/dev/video2",
       "width": 640,
       "height": 480,
       "buffer_size": 2,
       "rotation": 2,
       "exposure": 188,
-      "auto_exposure": 1
+      "auto_exposure": 1,
+      "timestamp": true
+    },
+    {
+      "name": "front",
+      "id": "/dev/video8",
+      "width": 640,
+      "height": 480,
+      "buffer_size": 2,
+      "rotation": 0,
+      "timestamp": true
     }
   ]
 }
