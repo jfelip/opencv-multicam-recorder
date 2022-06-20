@@ -12,8 +12,6 @@ from cv_image_utils import cat_horiz
 from cv_image_utils import get_camera_name
 
 
-# TODO: Display GUI FPS
-# TODO: Timestamp frames
 # TODO: Autodetect devices
 # TODO: Get/Display frame stats
 # TODO: Improve recording/playback memory management. Free memory after save frames.
