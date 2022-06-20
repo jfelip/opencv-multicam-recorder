@@ -233,12 +233,19 @@ class MultiStreamVideoGUI:
                 show_frame = put_text_multiline(show_frame, debug_str, (20, 240),
                                                 cv2.FONT_HERSHEY_SIMPLEX, 0.4, state_color, 1, line_advance=12)
 
+            t_elapsed_ms = int((time.time() - t_start) * 1000)
+            wait_ms = int((1/self.target_fps) * 1000) - t_elapsed_ms
+            show_frame = put_text_multiline(show_frame,
+                                            f"{1000.0/(t_elapsed_ms + max(1,wait_ms)):5.1f}FPS \n "
+                                            f"wait_ms:{wait_ms}\n "
+                                            f"proc_ms:{t_elapsed_ms}", (10, 80),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, state_color, 1, line_advance=12)
+
             t_ini = time.time()
             cv2.imshow(self.win_name, show_frame)
             times["imshow"] = time.time() - t_ini
 
-            t_elapsed_ms = int((time.time() - t_start) * 1000)
-            key = cv2.waitKey(int((1/self.target_fps) * 1000) - t_elapsed_ms)
+            key = cv2.waitKey(max(1,wait_ms))
 
         self.caps.release()
         self.writers.reset()
@@ -270,6 +277,7 @@ class MultiStreamVideoCapturer(threading.Thread):
         super().__init__()
         self.video_caps = list()
         self.streams_rotation = list()
+        self.streams_timestamp = list()
         self.target_fps = config["fps"]
         self.streams_cfg = config["streams"]
         for stream_cfg in config["streams"]:
@@ -280,6 +288,8 @@ class MultiStreamVideoCapturer(threading.Thread):
                 stream_cfg["exposure"] = 100
             if "rotation" not in stream_cfg.keys():
                 stream_cfg["rotation"] = -1
+            if "timestamp" not in stream_cfg.keys():
+                stream_cfg["timestamp"] = False
 
             cap = cv2.VideoCapture(stream_cfg["id"], cv2.CAP_V4L2)
             print(f"Opening cam: {stream_cfg['id']}. Backend: {cv2.CAP_V4L2}")
@@ -299,6 +309,7 @@ class MultiStreamVideoCapturer(threading.Thread):
             if cap.isOpened():
                 self.video_caps.append(cap)
                 self.streams_rotation.append(stream_cfg["rotation"])
+                self.streams_timestamp.append(stream_cfg["timestamp"])
                 print(f"Opened cam: {stream_cfg['id']}. Backend: {cap.getBackendName()}")
                 print(f"|-> name: {get_camera_name(stream_cfg['id'])}")
                 print(f"|-> config: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x"
@@ -352,6 +363,11 @@ class MultiStreamVideoCapturer(threading.Thread):
                     # Rotate if necessary
                     if self.streams_rotation[i] != -1:
                         frame = cv2.rotate(frame, self.streams_rotation[i])
+                    if self.streams_timestamp[i]:
+                        frame = put_text_multiline(frame,
+                                                   datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                                   (5, frame.shape[0]-10),
+                                                   cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 255, 255), 1, line_advance=10)
                     cap_frames.append(frame)
             self.mutex.acquire()
             self.frames = cap_frames
