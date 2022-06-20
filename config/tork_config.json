@@ -5,28 +5,32 @@
   "fps": 30,
   "streams": [
     {
-      "name": "c1",
-      "id": "/dev/video2",
+      "name": "side",
+      "id": "/dev/video0",
       "width": 640,
       "height": 480,
       "buffer_size": 2,
-      "rotation": 2
+      "rotation": 0,
+      "exposure": 188,
+      "auto_exposure": 1
     },
     {
-      "name": "c2",
-      "id": "/dev/video0",
-      "width": 800,
-      "height": 448,
+      "name": "front",
+      "id": "/dev/video6",
+      "width": 640,
+      "height": 480,
       "buffer_size": 2,
       "rotation": 0
     },
     {
-      "name": "c2",
-      "id": "/dev/video4",
-      "width": 800,
-      "height": 448,
+      "name": "back",
+      "id": "/dev/video8",
+      "width": 640,
+      "height": 480,
       "buffer_size": 2,
-      "rotation": 2
+      "rotation": 2,
+      "exposure": 188,
+      "auto_exposure": 1
     }
   ]
 }
