@@ -12,7 +12,7 @@ from cv_image_utils import cat_horiz
 from cv_image_utils import get_camera_name
 
 
-# TODO: Autodetect devices
+# TODO: Autodetect devices and their recording capabilities
 # TODO: Get/Display frame stats
 # TODO: Improve recording/playback memory management. Free memory after save frames.
 # TODO: Replace replay buffer in memory by reading frames from file
