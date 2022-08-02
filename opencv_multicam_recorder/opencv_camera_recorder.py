@@ -17,6 +17,9 @@ from cv_image_utils import get_camera_name
 # TODO: Improve recording/playback memory management. Free memory after save frames.
 # TODO: Replace replay buffer in memory by reading frames from file
 # TODO: Option to show camera id (device) and name overlay
+# TODO: Add total time timer
+# TODO: Format time in h:mm:ss.ms
+# TODO Reset timer, total elapsed time, set or clip number
 
 
 class MultiStreamVideoGUI:
@@ -303,6 +306,8 @@ class MultiStreamVideoCapturer(threading.Thread):
                 print(f"|-> Unable to set AUTO_EXPOSURE to {stream_cfg['auto_exposure']} on device: {stream_cfg['id']}")
             if not cap.set(cv2.CAP_PROP_EXPOSURE, stream_cfg['exposure']):
                 print(f"|-> Unable to set EXPOSURE to {stream_cfg['exposure']} on device: {stream_cfg['id']}")
+            if not cap.set(cv2.CAP_PROP_AUTO_WB, 1):
+                print(f"|-> Unable to set AUTO_WB ON on device: {stream_cfg['id']}")
 
             if cap.isOpened():
                 self.video_caps.append(cap)

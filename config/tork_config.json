@@ -28,11 +28,13 @@
     },
     {
       "name": "front",
-      "id": "/dev/video8",
-      "width": 640,
-      "height": 480,
+      "id": "/dev/video4",
+      "width": 320,
+      "height": 240,
       "buffer_size": 2,
-      "rotation": 0,
+      "rotation": 2,
+      "exposure": 508,
+      "auto_exposure": 0,
       "timestamp": true
     }
   ]
